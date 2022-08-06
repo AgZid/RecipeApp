@@ -3,7 +3,6 @@ package com.app.recipe.service;
 import com.app.recipe.modal.Ingredient;
 import com.app.recipe.modal.Preparation;
 import com.app.recipe.modal.Recipe;
-import com.app.recipe.repository.IngredientRepository;
 import com.app.recipe.repository.PreparationRepository;
 import com.app.recipe.repository.RecipeRepository;
 import org.slf4j.Logger;
@@ -12,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PreparationService {
@@ -26,45 +25,67 @@ public class PreparationService {
         this.recipeRepository = recipeRepository;
     }
 
-    public ResponseEntity<List<Ingredient>> findByRecipeId(Integer recipeId) {
-        LOGGER.info("Finding all ingredients for specific recipe {}", recipeId);
-        return new ResponseEntity(preparationRepository.findByRecipeId(recipeId), HttpStatus.OK);
-    }
+//    public ResponseEntity<List<Ingredient>> findByRecipeId(Integer recipeId) {
+//        LOGGER.info("Finding all ingredients for specific recipe {}", recipeId);
+//        return new ResponseEntity(preparationRepository.findByRecipeId(recipeId), HttpStatus.OK);
+//    }
 
     public ResponseEntity<Ingredient> update(Integer id, Preparation preparation) {
         LOGGER.info("Update ingredient id {}", id);
-        Preparation updatedPreparation = preparationRepository.findById(id).get();
-        updatedPreparation.setStepNo(preparation.getStepNo());
-        updatedPreparation.setStepAction(preparation.getStepAction());
-        preparationRepository.save(updatedPreparation);
-        return new ResponseEntity(preparationRepository.findById(id), HttpStatus.OK);
+        Optional<Preparation> foundPreparation = preparationRepository.findById(id);
+        if (foundPreparation.isPresent() && preparation != null) {
+            foundPreparation.map(
+                    preparation1 -> {
+                        preparation1.setStepNo(preparation.getStepNo());
+                        preparation1.setStepAction(preparation.getStepAction());
+                        return preparationRepository.save(preparation1);
+                    }
+            );
+            LOGGER.info("Preparation part updated");
+            return new ResponseEntity(preparationRepository.findById(id), HttpStatus.OK);
+        } else {
+           return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     public ResponseEntity<String> removeById(Integer id) {
         try {
             preparationRepository.deleteById(id);
-            return new ResponseEntity<String>(HttpStatus.OK);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (RuntimeException ex) {
-            // log the error message
             System.out.println(ex.getMessage());
-            return new ResponseEntity<String>(HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
     public ResponseEntity<Integer> create(Preparation preparation) {
-        LOGGER.info("Create new ingredient {}.", preparation.getStepAction());
-        Preparation savedPreparation = preparationRepository.saveAndFlush(preparation);
-        return new ResponseEntity(savedPreparation.getId(), HttpStatus.CREATED);
+        if (isPreparationValid(preparation)) {
+            LOGGER.info("Create new preparation {}.", preparation.getStepAction());
+            Preparation savedPreparation = preparationRepository.saveAndFlush(preparation);
+            return new ResponseEntity(savedPreparation.getId(), HttpStatus.CREATED);
+        } else {
+            LOGGER.info("Preparation () was not saved", preparation.getStepNo());
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     public ResponseEntity<Recipe> assignPreparationToRecipe(Integer preparationId, Integer recipeId) {
         LOGGER.info("Assign preparation {} to recipe {}.", preparationId, recipeId);
-        Recipe recipe = recipeRepository.findById(recipeId).get();
-        Preparation preparation = preparationRepository.findById(preparationId).get();
-        preparation.setRecipe(recipe);
-        preparationRepository.save(preparation);
-        LOGGER.info("Preparation assigned to recipe.");
-        return new ResponseEntity(recipeRepository.findById(recipeId), HttpStatus.OK);
+        Optional<Recipe> recipe = recipeRepository.findById(recipeId);
+        Optional<Preparation> preparation = preparationRepository.findById(preparationId);
+        if (recipe.isPresent() && preparation.isPresent()) {
+            preparation.get().setRecipe(recipe.get());
+            preparationRepository.save(preparation.get());
+            LOGGER.info("Preparation assigned to recipe.");
+            return new ResponseEntity(recipeRepository.findById(recipeId), HttpStatus.OK);
+        } else {
+            LOGGER.info("Preparation could not be assigned to recipe.");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private boolean isPreparationValid (Preparation preparation) {
+        return (preparation.getStepNo() >0 && preparation.getStepAction() != null);
     }
 
 }

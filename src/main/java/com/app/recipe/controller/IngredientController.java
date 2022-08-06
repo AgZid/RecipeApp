@@ -1,5 +1,6 @@
 package com.app.recipe.controller;
 
+import com.app.recipe.exception.NoResultFound;
 import com.app.recipe.modal.Ingredient;
 import com.app.recipe.modal.Recipe;
 import com.app.recipe.service.IngredientService;
@@ -20,7 +21,7 @@ public class IngredientController {
     }
 
     @GetMapping("/{id}/ingredients")
-    public ResponseEntity<List<Ingredient>> findByRecipeId(@PathVariable("recipeId") Integer recipeId) {
+    public ResponseEntity<List<Ingredient>> findByRecipeId(@PathVariable("recipeId") Integer recipeId) throws NoResultFound {
         return ingredientService.findByRecipeId(recipeId);
     }
 
@@ -32,7 +33,7 @@ public class IngredientController {
     @PutMapping("/ingredient/{id}")
     public ResponseEntity<Ingredient> update(
             @PathVariable("id") Integer id,
-            @RequestBody Ingredient ingredient) {
+            @RequestBody Ingredient ingredient) throws NoResultFound {
         return ingredientService.update(id, ingredient);
     }
 

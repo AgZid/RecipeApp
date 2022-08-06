@@ -1,5 +1,6 @@
 package com.app.recipe.controller;
 
+import com.app.recipe.exception.InvalidArgumentException;
 import com.app.recipe.modal.SelectedRecipe;
 import com.app.recipe.service.SelectedRecipeService;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class SelectedRecipeController {
     }
 
     @GetMapping("/ingredients")
-    public Map<String, Double> findAllIngredients() {
+    public Map<String, Double> findAllIngredients() throws InvalidArgumentException {
         return selectedRecipeService.findAllSelectedIngredients();
     }
 

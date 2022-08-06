@@ -3,7 +3,6 @@ package com.app.recipe.service;
 import com.app.recipe.exception.NoResultFound;
 import com.app.recipe.modal.Recipe;
 import com.app.recipe.repository.RecipeRepository;
-import com.app.recipe.repository.SelectedRecipeRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -11,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.persistence.NoResultException;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,8 +18,7 @@ public class RecipeService {
 
     private final Logger LOGGER = LoggerFactory.getLogger(RecipeService.class);
 
-    private RecipeRepository recipeRepository;
-    private SelectedRecipeRepository selectedRecipeRepository;
+    private final RecipeRepository recipeRepository;
 
     public RecipeService(RecipeRepository recipeRepository) {
         this.recipeRepository = recipeRepository;
@@ -63,8 +60,10 @@ public class RecipeService {
     }
 
     public ResponseEntity<Recipe> update(Integer id, Recipe recipe) throws NoResultFound {
-        if (isValidRecipeId(id) && recipe != null) {
-            Optional<Recipe> foundRecipe = recipeRepository.findById(id);
+        LOGGER.info("Updating recipe  id {} to {} ", id, recipe.getTitle());
+        Optional<Recipe> foundRecipe = recipeRepository.findById(id);
+
+        if (foundRecipe.isPresent() && isValidRecipeArguments(recipe)) {
             LOGGER.info("Updating recipe {} to {} ", foundRecipe.get().getTitle(), recipe.getTitle());
             foundRecipe.map(
                     recipe1 -> {
@@ -86,10 +85,13 @@ public class RecipeService {
         LOGGER.info("Finding recipe by id {}", id);
         {
             Optional<Recipe> foundRecipe = recipeRepository.findById(id);
-            if (!foundRecipe.isPresent()) {
+            if (foundRecipe.isEmpty()) {
                 throw new NoResultFound("Recipe not found with id " + id);
             } else return true;
         }
     }
 
+    private boolean isValidRecipeArguments(Recipe recipe) {
+        return recipe.getTitle() != null && recipe.getNumberOfServings() > 0;
+    }
 }

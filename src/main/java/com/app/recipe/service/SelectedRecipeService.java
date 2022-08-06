@@ -1,5 +1,6 @@
 package com.app.recipe.service;
 
+import com.app.recipe.exception.InvalidArgumentException;
 import com.app.recipe.modal.Ingredient;
 import com.app.recipe.modal.Recipe;
 import com.app.recipe.modal.SelectedRecipe;
@@ -14,7 +15,9 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+
 
 @Service
 public class SelectedRecipeService {
@@ -31,16 +34,21 @@ public class SelectedRecipeService {
     }
 
     public ResponseEntity<List<SelectedRecipe>> create(SelectedRecipe newSelectedRecipe) {
-        System.out.println("Naujas receptas: " + newSelectedRecipe);
-        if (isRecipeSelected(newSelectedRecipe.getRecipeId())) {
-            SelectedRecipe selectedRecipe = selectedRecipeRepository.findSelectedRecipeByRecipeId(newSelectedRecipe.getRecipeId());
-            selectedRecipe.setNumberOfServings(selectedRecipe.getNumberOfServings() + newSelectedRecipe.getNumberOfServings());
-            selectedRecipeRepository.save(selectedRecipe);
-            return new ResponseEntity(selectedRecipeRepository.findAll(), HttpStatus.OK);
+        if (isValidSelectedRecipe(newSelectedRecipe)) {
+            if (isRecipeInSelectedRecipesList(newSelectedRecipe.getRecipeId())) {
+                LOGGER.info("Updating selectedRecipe entity {}.", newSelectedRecipe.getNumberOfServings());
+                SelectedRecipe selectedRecipe = selectedRecipeRepository.findSelectedRecipeByRecipeId(newSelectedRecipe.getRecipeId());
+                selectedRecipe.setNumberOfServings(selectedRecipe.getNumberOfServings() + newSelectedRecipe.getNumberOfServings());
+                selectedRecipeRepository.save(selectedRecipe);
+                return new ResponseEntity(selectedRecipeRepository.findAll(), HttpStatus.OK);
+            } else {
+                LOGGER.info("Create new selectedRecipe entity {}.", newSelectedRecipe.getNumberOfServings());
+                selectedRecipeRepository.save(newSelectedRecipe);
+                return new ResponseEntity(selectedRecipeRepository.findAll(), HttpStatus.CREATED);
+            }
         } else {
-            LOGGER.info("Create new selectedRecipe entity {}.", newSelectedRecipe.getNumberOfServings());
-            selectedRecipeRepository.save(newSelectedRecipe);
-            return new ResponseEntity(selectedRecipeRepository.findAll(), HttpStatus.CREATED);
+            LOGGER.info("Incorrect selectedRecipe entity {}.", newSelectedRecipe.getNumberOfServings());
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -50,11 +58,16 @@ public class SelectedRecipeService {
     }
 
     public ResponseEntity<SelectedRecipe> update(Integer id, SelectedRecipe updatedSelectedRecipe) {
-        LOGGER.info("Update selected recipe");
-        SelectedRecipe selectedRecipe = selectedRecipeRepository.findById(id).get();
-        selectedRecipe.setNumberOfServings(updatedSelectedRecipe.getNumberOfServings());
-        selectedRecipeRepository.save(selectedRecipe);
-        return new ResponseEntity(selectedRecipeRepository.findById(id), HttpStatus.OK);
+        Optional<SelectedRecipe> selectedRecipe = selectedRecipeRepository.findById(id);
+        if (selectedRecipe.isPresent() && isValidSelectedRecipe(updatedSelectedRecipe)) {
+            LOGGER.info("Update selected recipe");
+            selectedRecipe.get().setNumberOfServings(updatedSelectedRecipe.getNumberOfServings());
+            selectedRecipeRepository.save(selectedRecipe.get());
+            return new ResponseEntity(selectedRecipeRepository.findById(id), HttpStatus.OK);
+        } else {
+            LOGGER.info("Incorrect data, selected recipe was not updated");
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
     }
 
     public ResponseEntity<String> delete(Integer id) {
@@ -62,14 +75,12 @@ public class SelectedRecipeService {
             selectedRecipeRepository.deleteById(id);
             return new ResponseEntity(HttpStatus.OK);
         } catch (RuntimeException ex) {
-            // log the error message
             System.out.println(ex.getMessage());
-            return new ResponseEntity(HttpStatus.NOT_FOUND);
+            return new ResponseEntity(HttpStatus.BAD_REQUEST);
         }
     }
 
-    public Map<String, Double> findAllSelectedIngredients() {
-
+    public Map<String, Double> findAllSelectedIngredients() throws InvalidArgumentException {
         List<SelectedRecipe> selectedRecipes = selectedRecipeRepository.findAll();
         int numberOfServings = 1;
         List<Ingredient> listOfIngredientsList = new ArrayList<>();
@@ -92,18 +103,26 @@ public class SelectedRecipeService {
 
     }
 
-    private List<Ingredient> multiplyIngredients(int selectedNumberOfServings,
+    protected List<Ingredient> multiplyIngredients(int selectedNumberOfServings,
                                                  int numberOfServings,
-                                                 List<Ingredient> ingredients) {
-
+                                                 List<Ingredient> ingredients) throws InvalidArgumentException {
         for (Ingredient ingredient : ingredients) {
+            if (ingredient.getQuantity() <= 0 || numberOfServings <= 0 || selectedNumberOfServings <= 0) {
+                throw new InvalidArgumentException("Some values are negative or equal to 0");
+            }
             ingredient.setQuantity(ingredient.getQuantity() / numberOfServings * selectedNumberOfServings);
         }
         return ingredients;
     }
 
-    private Boolean isRecipeSelected(Integer recipeId) {
-        return (selectedRecipeRepository.findSelectedRecipeIdByRecipeId(recipeId) != null);
+    private boolean isRecipeInSelectedRecipesList(Integer recipeId) {
+        System.out.println("Recipe id: "  + recipeId);
+        Integer selectedRecipeIdByRecipeId = selectedRecipeRepository.findSelectedRecipeIdByRecipeId(recipeId);
+        return selectedRecipeIdByRecipeId != null;
+    }
+
+    private boolean isValidSelectedRecipe(SelectedRecipe selectedRecipe) {
+        return (selectedRecipe.getRecipeId() != null && selectedRecipe.getNumberOfServings() > 0);
     }
 }
 

@@ -70,7 +70,7 @@ public class IngredientService {
         }
     }
 
-    public ResponseEntity<Integer> create(Ingredient ingredient) {;
+    public ResponseEntity<Integer> create(Ingredient ingredient) {
         if (isIngredientValid(ingredient)) {
             LOGGER.info("Create new ingredient {}.", ingredient.getProduct());
             Ingredient savedIngredient = ingredientRepository.saveAndFlush(ingredient);
@@ -98,8 +98,8 @@ public class IngredientService {
 
     private boolean isIngredientValid(Ingredient ingredient) {
         return (ingredient.getProduct() != null &&
-        ingredient.getMeasurementUnit() != null &&
-        ingredient.getQuantity() > 0);
+                ingredient.getMeasurementUnit() != null &&
+                ingredient.getQuantity() > 0);
     }
 
 }

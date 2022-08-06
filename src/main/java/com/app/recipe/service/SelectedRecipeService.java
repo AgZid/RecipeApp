@@ -104,8 +104,8 @@ public class SelectedRecipeService {
     }
 
     protected List<Ingredient> multiplyIngredients(int selectedNumberOfServings,
-                                                 int numberOfServings,
-                                                 List<Ingredient> ingredients) throws InvalidArgumentException {
+                                                   int numberOfServings,
+                                                   List<Ingredient> ingredients) throws InvalidArgumentException {
         for (Ingredient ingredient : ingredients) {
             if (ingredient.getQuantity() <= 0 || numberOfServings <= 0 || selectedNumberOfServings <= 0) {
                 throw new InvalidArgumentException("Some values are negative or equal to 0");
@@ -116,7 +116,7 @@ public class SelectedRecipeService {
     }
 
     private boolean isRecipeInSelectedRecipesList(Integer recipeId) {
-        System.out.println("Recipe id: "  + recipeId);
+        System.out.println("Recipe id: " + recipeId);
         Integer selectedRecipeIdByRecipeId = selectedRecipeRepository.findSelectedRecipeIdByRecipeId(recipeId);
         return selectedRecipeIdByRecipeId != null;
     }

@@ -25,11 +25,6 @@ public class PreparationService {
         this.recipeRepository = recipeRepository;
     }
 
-//    public ResponseEntity<List<Ingredient>> findByRecipeId(Integer recipeId) {
-//        LOGGER.info("Finding all ingredients for specific recipe {}", recipeId);
-//        return new ResponseEntity(preparationRepository.findByRecipeId(recipeId), HttpStatus.OK);
-//    }
-
     public ResponseEntity<Ingredient> update(Integer id, Preparation preparation) {
         LOGGER.info("Update ingredient id {}", id);
         Optional<Preparation> foundPreparation = preparationRepository.findById(id);
@@ -44,7 +39,7 @@ public class PreparationService {
             LOGGER.info("Preparation part updated");
             return new ResponseEntity(preparationRepository.findById(id), HttpStatus.OK);
         } else {
-           return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -84,8 +79,8 @@ public class PreparationService {
         }
     }
 
-    private boolean isPreparationValid (Preparation preparation) {
-        return (preparation.getStepNo() >0 && preparation.getStepAction() != null);
+    private boolean isPreparationValid(Preparation preparation) {
+        return (preparation.getStepNo() > 0 && preparation.getStepAction() != null);
     }
 
 }

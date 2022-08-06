@@ -1,6 +1,6 @@
 package com.app.recipe.exception;
 
-public class InvalidArgumentException extends Exception{
+public class InvalidArgumentException extends Exception {
     public InvalidArgumentException(String message) {
         super(message);
     }

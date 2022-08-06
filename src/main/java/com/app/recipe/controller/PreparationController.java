@@ -8,8 +8,6 @@ import com.app.recipe.service.PreparationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/app/recipes")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -40,7 +38,7 @@ public class PreparationController {
 
     @PutMapping("/preparation/{preparationId}/recipe/{recipeId}")
     public ResponseEntity<Recipe> addPreparationToRecipe(@PathVariable("preparationId") int preparationId,
-                                                        @PathVariable("recipeId") int recipeId) {
+                                                         @PathVariable("recipeId") int recipeId) {
         return preparationService.assignPreparationToRecipe(preparationId, recipeId);
     }
 

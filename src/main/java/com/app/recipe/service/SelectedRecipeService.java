@@ -115,7 +115,7 @@ public class SelectedRecipeService {
         return ingredients;
     }
 
-    private boolean isRecipeInSelectedRecipesList(Integer recipeId) {
+    protected boolean isRecipeInSelectedRecipesList(Integer recipeId) {
         System.out.println("Recipe id: " + recipeId);
         Integer selectedRecipeIdByRecipeId = selectedRecipeRepository.findSelectedRecipeIdByRecipeId(recipeId);
         return selectedRecipeIdByRecipeId != null;

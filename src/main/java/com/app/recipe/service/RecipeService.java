@@ -19,9 +19,11 @@ public class RecipeService {
     private final Logger LOGGER = LoggerFactory.getLogger(RecipeService.class);
 
     private final RecipeRepository recipeRepository;
+    private  final SelectedRecipeService selectedRecipeService;
 
-    public RecipeService(RecipeRepository recipeRepository) {
+    public RecipeService(RecipeRepository recipeRepository, SelectedRecipeService selectedRecipeService) {
         this.recipeRepository = recipeRepository;
+        this.selectedRecipeService = selectedRecipeService;
     }
 
     public ResponseEntity<List<Recipe>> findAll() {
@@ -51,7 +53,7 @@ public class RecipeService {
 
     public void removeById(Integer id) {
         LOGGER.info("Checking if recipe id {} is in selected recipe list.", id);
-        if (findById(id) != null) {
+        if (findById(id) != null && !selectedRecipeService.isRecipeInSelectedRecipesList(id)) {
             LOGGER.info("Remove recipe id {}.", id);
             recipeRepository.deleteById(id);
         } else {

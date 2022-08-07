@@ -28,7 +28,6 @@ public class EmailController {
     @GetMapping("/sendingEmail")
     public void sendEmail() throws InvalidArgumentException, MessagingException, IOException {
         Map<String, Double> allSelectedIngredients = selectedRecipeService.findAllSelectedIngredients();
-//        String allSelectedIngredients = "Visi ingredientai";
         emailService.sendEmail(allSelectedIngredients);
     }
 }
